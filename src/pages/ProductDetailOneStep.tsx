@@ -10,7 +10,7 @@ interface ProductDetailOneStepProps {
   onAddToCart: (product: Product) => void
 }
 
-export default function ProductDetailOneStep({ onAddToCart }: ProductDetailOneStepProps) {
+export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: ProductDetailOneStepProps) {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const [product, setProduct] = useState<Product | null>(null)

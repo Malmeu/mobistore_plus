@@ -24,7 +24,7 @@ function App() {
     return saved ? JSON.parse(saved) : []
   })
 
-  const { favorites, toggleFavorite, removeFromFavorites } = useFavorites()
+  const { favorites, removeFromFavorites } = useFavorites()
 
   useEffect(() => {
     localStorage.setItem('cart', JSON.stringify(cartItems))
