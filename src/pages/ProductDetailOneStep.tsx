@@ -23,6 +23,8 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [deliveryPrice, setDeliveryPrice] = useState(0)
+  const [variants, setVariants] = useState<Array<{ id: string; name: string; value: string; price_adjustment: number; stock: number }>>([])
+  const [selectedVariants, setSelectedVariants] = useState<Record<string, string>>({})
   const [formData, setFormData] = useState({
     customer_name: '',
     customer_phone: '',
@@ -64,6 +66,16 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
         setProductImages(images.map(img => img.image_url))
       } else {
         setProductImages([data.image_url])
+      }
+
+      // Charger les variantes du produit
+      const { data: productVariants } = await supabase
+        .from('product_variants')
+        .select('*')
+        .eq('product_id', id)
+
+      if (productVariants && productVariants.length > 0) {
+        setVariants(productVariants)
       }
 
       if (data) {
@@ -110,6 +122,20 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
     }
   }
 
+  const calculateTotalPrice = () => {
+    if (!product) return 0
+    let total = product.price
+    
+    Object.values(selectedVariants).forEach(variantId => {
+      const variant = variants.find(v => v.id === variantId)
+      if (variant) {
+        total += variant.price_adjustment
+      }
+    })
+    
+    return total
+  }
+
   const handleAddToCart = () => {
     if (product) {
       for (let i = 0; i < quantity; i++) {
@@ -123,7 +149,8 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
     if (!product) return
 
     try {
-      const total = (product.price * quantity) + deliveryPrice
+      const productPrice = calculateTotalPrice()
+      const total = (productPrice * quantity) + deliveryPrice
 
       const { data: order, error: orderError } = await supabase
         .from('orders')
@@ -143,7 +170,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
           order_id: order.id,
           product_id: product.id,
           quantity,
-          price: product.price,
+          price: productPrice,
         })
 
       if (itemsError) throw itemsError
@@ -229,7 +256,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Sous-total :</span>
-                <span className="font-medium">{(product.price * quantity).toLocaleString('fr-DZ')} DA</span>
+                <span className="font-medium">{(calculateTotalPrice() * quantity).toLocaleString('fr-DZ')} DA</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-gray-600">Livraison :</span>
@@ -238,7 +265,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
               <div className="border-t pt-2 flex justify-between text-xl font-bold">
                 <span>Total :</span>
                 <span className="text-primary-600">
-                  {((product.price * quantity) + deliveryPrice).toLocaleString('fr-DZ')} DA
+                  {((calculateTotalPrice() * quantity) + deliveryPrice).toLocaleString('fr-DZ')} DA
                 </span>
               </div>
             </div>
@@ -332,17 +359,58 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
 
           <div className="space-y-4 md:space-y-6">
             {/* Description */}
-            <div>
-              <h3 className="font-semibold text-lg md:text-xl mb-2 md:mb-3">Description</h3>
+            <div className="mb-6 md:mb-8">
+              <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Description</h2>
               <p className="text-sm md:text-base text-gray-600 leading-relaxed">{product.description}</p>
             </div>
+
+            {/* Variantes */}
+            {variants.length > 0 && (
+              <div className="mb-6 md:mb-8">
+                <h2 className="text-lg md:text-xl font-bold mb-3 md:mb-4">Options disponibles</h2>
+                <div className="space-y-4">
+                  {Object.entries(
+                    variants.reduce((acc, variant) => {
+                      if (!acc[variant.name]) acc[variant.name] = []
+                      acc[variant.name].push(variant)
+                      return acc
+                    }, {} as Record<string, typeof variants>)
+                  ).map(([variantName, variantOptions]) => (
+                    <div key={variantName}>
+                      <label className="block text-sm md:text-base font-medium mb-2">{variantName}</label>
+                      <div className="flex flex-wrap gap-2">
+                        {variantOptions.map((variant) => (
+                          <button
+                            key={variant.id}
+                            type="button"
+                            onClick={() => setSelectedVariants({ ...selectedVariants, [variantName]: variant.id })}
+                            className={`px-4 py-2 rounded-xl border-2 transition-all text-sm md:text-base ${
+                              selectedVariants[variantName] === variant.id
+                                ? 'border-primary-500 bg-primary-50 text-primary-700 font-medium'
+                                : 'border-gray-200 hover:border-gray-300 text-gray-700'
+                            }`}
+                          >
+                            {variant.value}
+                            {variant.price_adjustment !== 0 && (
+                              <span className="ml-1 text-xs">
+                                ({variant.price_adjustment > 0 ? '+' : ''}{variant.price_adjustment} DA)
+                              </span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* Prix encadré */}
             <div className="border-2 border-gray-200 rounded-2xl p-4 md:p-6">
               <div className="flex items-baseline justify-between mb-4">
                 <div className="flex items-baseline space-x-2">
                   <span className="text-2xl md:text-3xl font-bold text-gray-900">
-                    {product.price.toLocaleString('fr-DZ')}
+                    {calculateTotalPrice().toLocaleString('fr-DZ')}
                   </span>
                   <span className="text-lg md:text-xl text-gray-600">DA</span>
                 </div>
@@ -456,7 +524,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
                   <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Sous-total :</span>
                     <span className="font-semibold">
-                      {(product.price * quantity).toLocaleString('fr-DZ')} DA
+                      {(calculateTotalPrice() * quantity).toLocaleString('fr-DZ')} DA
                     </span>
                   </div>
                   <div className="flex justify-between text-sm md:text-base">
@@ -468,7 +536,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
                   <div className="border-t pt-2 flex justify-between items-center">
                     <span className="text-lg md:text-xl font-bold">Total :</span>
                     <span className="text-xl md:text-2xl font-bold text-primary-600">
-                      {((product.price * quantity) + deliveryPrice).toLocaleString('fr-DZ')} DA
+                      {((calculateTotalPrice() * quantity) + deliveryPrice).toLocaleString('fr-DZ')} DA
                     </span>
                   </div>
                 </div>
