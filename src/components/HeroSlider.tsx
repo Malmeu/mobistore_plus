@@ -43,7 +43,7 @@ export default function HeroSlider() {
   }
 
   return (
-    <div className="relative w-full h-[500px] md:h-[600px] overflow-hidden">
+    <div className="relative w-full h-[400px] sm:h-[500px] md:h-[600px] overflow-hidden">
       {/* Slides */}
       <div className="relative w-full h-full">
         {slides.map((slide, index) => (
@@ -56,7 +56,7 @@ export default function HeroSlider() {
             <img
               src={slide.image}
               alt={slide.alt}
-              className="w-full h-full object-cover object-center"
+              className="w-full h-full object-contain md:object-cover object-center bg-white"
             />
           </div>
         ))}
