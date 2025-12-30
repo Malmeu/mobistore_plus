@@ -38,10 +38,8 @@ export default function Home({ onAddToCart }: HomeProps) {
 
   return (
     <div className="min-h-screen">
-      <section className="py-8 px-4">
-        <div className="max-w-7xl mx-auto">
-          <HeroSlider />
-        </div>
+      <section>
+        <HeroSlider />
       </section>
 
       <CategoryCarousel />
