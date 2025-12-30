@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
-import { ArrowRight, Sparkles, Shield, Truck, Headphones } from 'lucide-react'
+import { ArrowRight, Shield, Truck, Headphones, Sparkles } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
+import HeroSlider from '../components/HeroSlider'
+import CategoryCarousel from '../components/CategoryCarousel'
 import { supabase } from '../lib/supabase'
 import type { Product } from '../types'
 
@@ -36,53 +38,13 @@ export default function Home({ onAddToCart }: HomeProps) {
 
   return (
     <div className="min-h-screen">
-      <section className="relative overflow-hidden py-20 px-4">
-        <div className="absolute inset-0 bg-gradient-to-br from-pastel-blue/30 via-pastel-purple/20 to-pastel-pink/30 -z-10"></div>
-        
+      <section className="py-8 px-4">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div className="space-y-6">
-              <div className="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-4 py-2 rounded-full shadow-soft">
-                <Sparkles className="w-4 h-4 text-primary-500" />
-                <span className="text-sm font-semibold text-primary-600">Nouveautés 2024</span>
-              </div>
-              
-              <h1 className="text-5xl md:text-6xl font-bold leading-tight">
-                Les Meilleurs
-                <span className="block bg-gradient-to-r from-neon-blue to-neon-purple bg-clip-text text-transparent">
-                  Accessoires Mobile
-                </span>
-                en Algérie
-              </h1>
-              
-              <p className="text-xl text-gray-600">
-                Découvrez notre collection exclusive d'accessoires de qualité premium pour tous vos appareils.
-              </p>
-              
-              <div className="flex flex-wrap gap-4">
-                <Link to="/products" className="btn-primary flex items-center space-x-2">
-                  <span>Découvrir</span>
-                  <ArrowRight className="w-5 h-5" />
-                </Link>
-                <Link to="/categories" className="btn-secondary">
-                  Voir les catégories
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute inset-0 bg-gradient-to-br from-neon-blue/20 to-neon-purple/20 rounded-3xl blur-3xl"></div>
-              <div className="relative bg-white/50 backdrop-blur-sm rounded-3xl p-8 shadow-soft-lg">
-                <img 
-                  src="https://images.unsplash.com/photo-1760443728225-1fe6ccc65ef9?q=80&w=1752&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
-                  alt="Accessoires mobile"
-                  className="w-full h-96 object-cover rounded-2xl"
-                />
-              </div>
-            </div>
-          </div>
+          <HeroSlider />
         </div>
       </section>
+
+      <CategoryCarousel />
 
       <section className="py-16 px-4 bg-white/50">
         <div className="max-w-7xl mx-auto">
