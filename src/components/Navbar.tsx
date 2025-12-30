@@ -1,4 +1,4 @@
-import { ShoppingCart, Search, Menu, Phone } from 'lucide-react'
+import { ShoppingCart, Search, Menu } from 'lucide-react'
 import { Link } from 'react-router-dom'
 import { useState } from 'react'
 import SearchModal from './SearchModal'
@@ -17,13 +17,11 @@ export default function Navbar({ cartItemsCount }: NavbarProps) {
         <div className="flex items-center justify-between h-20">
           <Link to="/" className="flex items-center space-x-3">
             <div className="relative">
-              <div className="w-12 h-12 bg-gradient-to-br from-neon-blue to-neon-purple rounded-2xl flex items-center justify-center shadow-neon">
-                <Phone className="w-6 h-6 text-white" />
-              </div>
+              <img src="/M+.png" alt="MobiStore +" className="w-12 h-12 object-contain" />
             </div>
             <div>
               <h1 className="text-2xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-                MOBISTORE
+                MobiStore +
               </h1>
               <p className="text-xs text-gray-500">Téléphones & Accessoires</p>
             </div>

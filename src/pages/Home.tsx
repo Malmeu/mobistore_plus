@@ -74,7 +74,7 @@ export default function Home({ onAddToCart }: HomeProps) {
               <div className="absolute inset-0 bg-gradient-to-br from-neon-blue/20 to-neon-purple/20 rounded-3xl blur-3xl"></div>
               <div className="relative bg-white/50 backdrop-blur-sm rounded-3xl p-8 shadow-soft-lg">
                 <img 
-                  src="https://images.unsplash.com/photo-1601784551446-20c9e07cdbdb?w=600&h=600&fit=crop" 
+                  src="https://images.unsplash.com/photo-1760443728225-1fe6ccc65ef9?q=80&w=1752&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" 
                   alt="Accessoires mobile"
                   className="w-full h-96 object-cover rounded-2xl"
                 />
