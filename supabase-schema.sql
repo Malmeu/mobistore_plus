@@ -36,6 +36,17 @@ CREATE TABLE IF NOT EXISTS product_images (
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- Création de la table des variantes de produits
+CREATE TABLE IF NOT EXISTS product_variants (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  product_id UUID REFERENCES products(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  value TEXT NOT NULL,
+  price_adjustment DECIMAL(10, 2) DEFAULT 0,
+  stock INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- Création de la table des commandes
 CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -90,6 +101,7 @@ ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE order_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE delivery_settings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE product_images ENABLE ROW LEVEL SECURITY;
+ALTER TABLE product_variants ENABLE ROW LEVEL SECURITY;
 
 -- Politiques RLS pour permettre la lecture publique
 DO $$ 
@@ -108,6 +120,10 @@ BEGIN
   
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'product_images' AND policyname = 'Lecture publique des images de produits') THEN
     CREATE POLICY "Lecture publique des images de produits" ON product_images FOR SELECT USING (true);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'product_variants' AND policyname = 'Lecture publique des variantes de produits') THEN
+    CREATE POLICY "Lecture publique des variantes de produits" ON product_variants FOR SELECT USING (true);
   END IF;
 END $$;
 
@@ -147,6 +163,10 @@ BEGIN
   
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'product_images' AND policyname = 'Modification admin des images de produits') THEN
     CREATE POLICY "Modification admin des images de produits" ON product_images FOR ALL USING (auth.uid() IS NOT NULL);
+  END IF;
+  
+  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'product_variants' AND policyname = 'Modification admin des variantes de produits') THEN
+    CREATE POLICY "Modification admin des variantes de produits" ON product_variants FOR ALL USING (auth.uid() IS NOT NULL);
   END IF;
 
   IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE tablename = 'orders' AND policyname = 'Modification admin des commandes') THEN
