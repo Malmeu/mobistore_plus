@@ -44,39 +44,39 @@ export default function Home({ onAddToCart }: HomeProps) {
 
       <CategoryCarousel />
 
-      <section className="py-16 px-4 bg-white/50">
+      <section className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-pastel-blue to-primary-400 rounded-2xl flex items-center justify-center mx-auto shadow-soft">
-                <Truck className="w-8 h-8 text-white" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <Truck className="w-10 h-10 text-white" />
               </div>
-              <h3 className="font-semibold text-lg">Livraison Rapide</h3>
-              <p className="text-gray-600 text-sm">Livraison dans toute l'Algérie en 48h</p>
+              <h3 className="font-bold text-base md:text-lg">Livraison Rapide</h3>
+              <p className="text-gray-600 text-xs md:text-sm">Livraison dans toute l'Algérie en 48h</p>
             </div>
 
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-pastel-purple to-neon-purple rounded-2xl flex items-center justify-center mx-auto shadow-soft">
-                <Shield className="w-8 h-8 text-white" />
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-400 to-purple-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <Shield className="w-10 h-10 text-white" />
               </div>
-              <h3 className="font-semibold text-lg">Garantie Qualité</h3>
-              <p className="text-gray-600 text-sm">Produits authentiques garantis</p>
+              <h3 className="font-bold text-base md:text-lg">Garantie Qualité</h3>
+              <p className="text-gray-600 text-xs md:text-sm">Produits authentiques garantis</p>
             </div>
 
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-pastel-pink to-red-400 rounded-2xl flex items-center justify-center mx-auto shadow-soft">
-                <Headphones className="w-8 h-8 text-white" />
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-pink-400 to-pink-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <Headphones className="w-10 h-10 text-white" />
               </div>
-              <h3 className="font-semibold text-lg">Support 24/7</h3>
-              <p className="text-gray-600 text-sm">Assistance client disponible</p>
+              <h3 className="font-bold text-base md:text-lg">Support 24/7</h3>
+              <p className="text-gray-600 text-xs md:text-sm">Assistance client disponible</p>
             </div>
 
-            <div className="text-center space-y-3">
-              <div className="w-16 h-16 bg-gradient-to-br from-pastel-green to-green-400 rounded-2xl flex items-center justify-center mx-auto shadow-soft">
-                <Sparkles className="w-8 h-8 text-white" />
+            <div className="text-center space-y-4">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-500 rounded-full flex items-center justify-center mx-auto shadow-lg">
+                <Sparkles className="w-10 h-10 text-white" />
               </div>
-              <h3 className="font-semibold text-lg">Prix Compétitifs</h3>
-              <p className="text-gray-600 text-sm">Meilleurs prix du marché</p>
+              <h3 className="font-bold text-base md:text-lg">Prix Compétitifs</h3>
+              <p className="text-gray-600 text-xs md:text-sm">Meilleurs prix du marché</p>
             </div>
           </div>
         </div>

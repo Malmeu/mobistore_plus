@@ -56,7 +56,7 @@ export default function HeroSlider() {
             <img
               src={slide.image}
               alt={slide.alt}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
             />
           </div>
         ))}
