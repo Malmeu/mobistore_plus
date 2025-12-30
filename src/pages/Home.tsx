@@ -44,6 +44,18 @@ export default function Home({ onAddToCart }: HomeProps) {
 
       <CategoryCarousel />
 
+      <section className="py-12 px-4">
+        <div className="max-w-7xl mx-auto">
+          <iframe 
+            src="https://jitone.vercel.app/widget" 
+            width="100%" 
+            height="350" 
+            style={{ border: 'none', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
+            title="Widget de suivi RepairTrack"
+          />
+        </div>
+      </section>
+
       <section className="py-16 px-4 bg-gradient-to-br from-gray-50 to-white">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
@@ -79,18 +91,6 @@ export default function Home({ onAddToCart }: HomeProps) {
               <p className="text-gray-600 text-xs md:text-sm">Meilleurs prix du marché</p>
             </div>
           </div>
-        </div>
-      </section>
-
-      <section className="py-12 px-4">
-        <div className="max-w-7xl mx-auto">
-          <iframe 
-            src="https://jitone.vercel.app/widget" 
-            width="100%" 
-            height="350" 
-            style={{ border: 'none', borderRadius: '16px', boxShadow: '0 4px 6px rgba(0,0,0,0.1)' }}
-            title="Widget de suivi RepairTrack"
-          />
         </div>
       </section>
 
