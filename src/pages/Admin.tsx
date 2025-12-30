@@ -55,6 +55,8 @@ export default function Admin() {
     category: 'coques',
     stock: '',
   })
+  const [variants, setVariants] = useState<Array<{ name: string; value: string; price_adjustment: string; stock: string }>>([])
+  const [newVariant, setNewVariant] = useState({ name: '', value: '', price_adjustment: '0', stock: '0' })
   const [deliveryPrices, setDeliveryPrices] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -235,9 +237,35 @@ export default function Admin() {
         if (imagesError) throw imagesError
       }
 
+      // Gestion des variantes
+      if (editingProduct) {
+        await supabase
+          .from('product_variants')
+          .delete()
+          .eq('product_id', productId)
+      }
+
+      if (variants.length > 0) {
+        const variantRecords = variants.map(variant => ({
+          product_id: productId,
+          name: variant.name,
+          value: variant.value,
+          price_adjustment: parseFloat(variant.price_adjustment || '0'),
+          stock: parseInt(variant.stock || '0'),
+        }))
+
+        const { error: variantsError } = await supabase
+          .from('product_variants')
+          .insert(variantRecords)
+
+        if (variantsError) throw variantsError
+      }
+
       setShowAddModal(false)
       setEditingProduct(null)
       setFormData({ name: '', description: '', price: '', image_url: '', category: 'coques', stock: '' })
+      setVariants([])
+      setNewVariant({ name: '', value: '', price_adjustment: '0', stock: '0' })
       setImageFiles([])
       setImagePreviews([])
       fetchProducts()
@@ -298,8 +326,26 @@ export default function Admin() {
       } else {
         setImagePreviews([product.image_url])
       }
+
+      // Charger les variantes existantes
+      const { data: existingVariants } = await supabase
+        .from('product_variants')
+        .select('*')
+        .eq('product_id', product.id)
+
+      if (existingVariants && existingVariants.length > 0) {
+        setVariants(existingVariants.map(v => ({
+          name: v.name,
+          value: v.value,
+          price_adjustment: v.price_adjustment.toString(),
+          stock: v.stock.toString(),
+        })))
+      } else {
+        setVariants([])
+      }
     } catch (error) {
       setImagePreviews([product.image_url])
+      setVariants([])
     }
 
     setImageFiles([])
@@ -790,6 +836,76 @@ export default function Admin() {
                       placeholder="URL de l'image (https://...)"
                     />
                   </div>
+                </div>
+
+                <div className="border-t pt-6">
+                  <label className="block text-sm font-medium mb-4">Variantes (Couleurs, Tailles, etc.)</label>
+                  
+                  {variants.length > 0 && (
+                    <div className="mb-4 space-y-2">
+                      {variants.map((variant, index) => (
+                        <div key={index} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg">
+                          <div className="flex-1 grid grid-cols-4 gap-2 text-sm">
+                            <span><strong>Type:</strong> {variant.name}</span>
+                            <span><strong>Valeur:</strong> {variant.value}</span>
+                            <span><strong>Prix:</strong> {variant.price_adjustment > '0' ? '+' : ''}{variant.price_adjustment} DA</span>
+                            <span><strong>Stock:</strong> {variant.stock}</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setVariants(variants.filter((_, i) => i !== index))}
+                            className="w-8 h-8 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                          >
+                            ×
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                    <input
+                      type="text"
+                      value={newVariant.name}
+                      onChange={(e) => setNewVariant({ ...newVariant, name: e.target.value })}
+                      className="input-field text-sm"
+                      placeholder="Type (ex: Couleur)"
+                    />
+                    <input
+                      type="text"
+                      value={newVariant.value}
+                      onChange={(e) => setNewVariant({ ...newVariant, value: e.target.value })}
+                      className="input-field text-sm"
+                      placeholder="Valeur (ex: Rouge)"
+                    />
+                    <input
+                      type="number"
+                      value={newVariant.price_adjustment}
+                      onChange={(e) => setNewVariant({ ...newVariant, price_adjustment: e.target.value })}
+                      className="input-field text-sm"
+                      placeholder="Ajust. prix"
+                    />
+                    <input
+                      type="number"
+                      value={newVariant.stock}
+                      onChange={(e) => setNewVariant({ ...newVariant, stock: e.target.value })}
+                      className="input-field text-sm"
+                      placeholder="Stock"
+                    />
+                  </div>
+                  
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (newVariant.name && newVariant.value) {
+                        setVariants([...variants, newVariant])
+                        setNewVariant({ name: '', value: '', price_adjustment: '0', stock: '0' })
+                      }
+                    }}
+                    className="btn-secondary w-full text-sm"
+                  >
+                    + Ajouter une variante
+                  </button>
                 </div>
 
                 <div className="flex gap-4">
