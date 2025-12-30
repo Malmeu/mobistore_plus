@@ -37,8 +37,8 @@ export default function Home({ onAddToCart }: HomeProps) {
   }
 
   return (
-    <div className="min-h-screen">
-      <section>
+    <div className="min-h-screen overflow-x-hidden">
+      <section className="w-full">
         <HeroSlider />
       </section>
 
