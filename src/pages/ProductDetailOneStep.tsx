@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Truck, Shield, ArrowLeft, Star, Check, Phone } from 'lucide-react'
+import { ShoppingCart, Heart, Truck, Shield, ArrowLeft, Star, Check, ChevronLeft, ChevronRight, Phone } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShareProductButton from '../components/ShareProductButton'
+import ProductCard from '../components/ProductCard'
 import type { Product } from '../types'
 import { WILAYAS } from '../types'
 
@@ -19,6 +20,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
   const [selectedImage, setSelectedImage] = useState(0)
   const [productImages, setProductImages] = useState<string[]>([])
   const [isFavorite, setIsFavorite] = useState(false)
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
   const [orderPlaced, setOrderPlaced] = useState(false)
   const [deliveryPrice, setDeliveryPrice] = useState(0)
   const [formData, setFormData] = useState({
@@ -39,6 +41,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
       fetchDeliveryPrice(formData.wilaya)
     }
   }, [formData.wilaya])
+
 
   const fetchProduct = async () => {
     try {
@@ -62,10 +65,30 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
       } else {
         setProductImages([data.image_url])
       }
+
+      if (data) {
+        fetchRelatedProducts(data.category)
+      }
     } catch (error) {
       console.error('Erreur:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchRelatedProducts = async (category: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('category', category)
+        .neq('id', id)
+        .limit(4)
+
+      if (error) throw error
+      setRelatedProducts(data || [])
+    } catch (error) {
+      console.error('Erreur:', error)
     }
   }
 
@@ -84,6 +107,14 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
       }
     } catch (error) {
       setDeliveryPrice(0)
+    }
+  }
+
+  const handleAddToCart = () => {
+    if (product) {
+      for (let i = 0; i < quantity; i++) {
+        _onAddToCart(product)
+      }
     }
   }
 
@@ -125,6 +156,14 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
     }
   }
 
+  const nextImage = () => {
+    setSelectedImage((prev) => (prev + 1) % images.length)
+  }
+
+  const prevImage = () => {
+    setSelectedImage((prev) => (prev - 1 + images.length) % images.length)
+  }
+
   const images = productImages.length > 0 ? productImages : (product ? [product.image_url] : [])
 
   if (loading) {
@@ -163,12 +202,12 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
   if (orderPlaced) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-green-100 flex items-center justify-center px-4">
-        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-soft-lg p-12 text-center">
-          <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Check className="w-12 h-12 text-white" />
+        <div className="max-w-2xl w-full bg-white rounded-3xl shadow-soft-lg p-8 md:p-12 text-center">
+          <div className="w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check className="w-10 h-10 md:w-12 md:h-12 text-white" />
           </div>
-          <h1 className="text-4xl font-bold mb-4">Commande confirmée !</h1>
-          <p className="text-xl text-gray-600 mb-8">
+          <h1 className="text-3xl md:text-4xl font-bold mb-4">Commande confirmée !</h1>
+          <p className="text-lg md:text-xl text-gray-600 mb-8">
             Merci pour votre commande ! Nous vous contacterons très bientôt au{' '}
             <span className="font-semibold text-primary-600">{formData.customer_phone}</span> pour
             confirmer la livraison.
@@ -216,6 +255,7 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
     )
   }
 
+
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -227,114 +267,148 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
           <span>Retour</span>
         </button>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        {/* Titre du produit */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-2">{product.name}</h1>
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-4 h-4 md:w-5 md:h-5 ${
+                    i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-sm md:text-base text-gray-600">(4.0) • 127 avis</span>
+            <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-xs md:text-sm font-medium">
+              {product.category}
+            </span>
+          </div>
+        </div>
+
+        <div className="grid md:grid-cols-2 gap-8 md:gap-12">
+          {/* Slider d'images */}
           <div className="space-y-4">
-            <div className="card p-4 overflow-hidden">
+            <div className="relative card p-4 overflow-hidden group">
               <img
                 src={images[selectedImage]}
                 alt={product.name}
-                className="w-full h-[500px] object-cover rounded-2xl"
+                className="w-full h-64 md:h-96 object-contain rounded-2xl"
               />
+              <button
+                onClick={prevImage}
+                className="absolute left-2 md:left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 md:p-3 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft className="w-4 h-4 md:w-5 md:h-5 text-gray-900" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-2 md:right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-2 md:p-3 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight className="w-4 h-4 md:w-5 md:h-5 text-gray-900" />
+              </button>
             </div>
             
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 md:gap-4">
               {images.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImage(index)}
                   className={`card p-2 overflow-hidden transition-all ${
-                    selectedImage === index ? 'ring-4 ring-primary-500' : ''
+                    selectedImage === index ? 'ring-2 ring-primary-500' : ''
                   }`}
                 >
                   <img
                     src={img}
                     alt={`${product.name} ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-xl"
+                    className="w-full h-16 md:h-24 object-contain rounded-xl"
                   />
                 </button>
               ))}
             </div>
           </div>
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
+            {/* Description */}
             <div>
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">{product.name}</h1>
-              
-              <div className="flex items-center space-x-2 mb-6">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${
-                        i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-gray-600">(4.8) • 247 avis</span>
-              </div>
+              <h3 className="font-semibold text-lg md:text-xl mb-2 md:mb-3">Description</h3>
+              <p className="text-sm md:text-base text-gray-600 leading-relaxed">{product.description}</p>
+            </div>
 
-              <div className="bg-gradient-to-r from-primary-500 to-primary-600 text-white rounded-3xl p-6 mb-6">
+            {/* Prix encadré */}
+            <div className="border-2 border-gray-200 rounded-2xl p-4 md:p-6">
+              <div className="flex items-baseline justify-between mb-4">
                 <div className="flex items-baseline space-x-2">
-                  <span className="text-5xl font-bold">
+                  <span className="text-2xl md:text-3xl font-bold text-gray-900">
                     {product.price.toLocaleString('fr-DZ')}
                   </span>
-                  <span className="text-2xl">DA</span>
+                  <span className="text-lg md:text-xl text-gray-600">DA</span>
                 </div>
-              </div>
-
-              <p className="text-gray-600 leading-relaxed mb-6">{product.description}</p>
-
-              <div className="flex items-center space-x-2 mb-6">
                 <button
                   onClick={() => setIsFavorite(!isFavorite)}
-                  className={`p-3 rounded-xl transition-all ${
+                  className={`p-2 rounded-xl transition-all ${
                     isFavorite
-                      ? 'bg-red-500 text-white'
+                      ? 'bg-red-50 text-red-500'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
+                  <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
-                <ShareProductButton productId={product.id} productName={product.name} />
               </div>
+              {product.stock < 5 && product.stock > 0 && (
+                <p className="text-sm md:text-base text-orange-600 font-medium">
+                  ⚠️ Plus que {product.stock} en stock !
+                </p>
+              )}
+              {product.stock === 0 && (
+                <p className="text-sm md:text-base text-red-600 font-medium">❌ Rupture de stock</p>
+              )}
+              {product.stock >= 5 && (
+                <p className="text-sm md:text-base text-green-600 font-medium flex items-center space-x-2">
+                  <Check className="w-5 h-5" />
+                  <span>En stock</span>
+                </p>
+              )}
             </div>
 
-            <div className="card p-6 bg-gradient-to-br from-pastel-blue/20 to-pastel-pink/20">
-              <h3 className="text-2xl font-bold mb-6">Commander maintenant</h3>
+            {/* Formulaire de commande encadré orange */}
+            <div className="border-2 border-primary-500 rounded-2xl p-4 md:p-6">
+              <h3 className="text-xl md:text-2xl font-bold mb-4 md:mb-6">Commander maintenant</h3>
               
-              <form onSubmit={handleOrder} className="space-y-4">
+              <form onSubmit={handleOrder} className="space-y-3 md:space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Nom complet *</label>
+                  <label className="block text-xs md:text-sm font-medium mb-2">Nom complet *</label>
                   <input
                     type="text"
                     required
                     value={formData.customer_name}
                     onChange={(e) => setFormData({ ...formData, customer_name: e.target.value })}
-                    className="input-field"
+                    className="input-field text-sm md:text-base"
                     placeholder="Votre nom complet"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Téléphone *</label>
+                  <label className="block text-xs md:text-sm font-medium mb-2">Téléphone *</label>
                   <input
                     type="tel"
                     required
                     value={formData.customer_phone}
                     onChange={(e) => setFormData({ ...formData, customer_phone: e.target.value })}
-                    className="input-field"
+                    className="input-field text-sm md:text-base"
                     placeholder="05XX XX XX XX"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Wilaya *</label>
+                  <label className="block text-xs md:text-sm font-medium mb-2">Wilaya *</label>
                   <select
                     required
                     value={formData.wilaya}
                     onChange={(e) => setFormData({ ...formData, wilaya: e.target.value })}
-                    className="input-field"
+                    className="input-field text-sm md:text-base"
                   >
                     <option value="">Sélectionnez votre wilaya</option>
                     {WILAYAS.map((wilaya) => (
@@ -346,54 +420,54 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Adresse *</label>
+                  <label className="block text-xs md:text-sm font-medium mb-2">Adresse *</label>
                   <textarea
                     required
                     value={formData.customer_address}
                     onChange={(e) => setFormData({ ...formData, customer_address: e.target.value })}
-                    className="input-field"
+                    className="input-field text-sm md:text-base"
                     rows={2}
                     placeholder="Votre adresse complète"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium mb-2">Quantité</label>
+                  <label className="block text-xs md:text-sm font-medium mb-2">Quantité</label>
                   <div className="flex items-center space-x-4">
                     <button
                       type="button"
                       onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors text-xl font-bold"
+                      className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors text-lg md:text-xl font-bold"
                     >
                       -
                     </button>
-                    <span className="font-bold text-xl w-12 text-center">{quantity}</span>
+                    <span className="font-bold text-lg md:text-xl w-10 md:w-12 text-center">{quantity}</span>
                     <button
                       type="button"
                       onClick={() => setQuantity(quantity + 1)}
-                      className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors text-xl font-bold"
+                      className="w-8 h-8 md:w-10 md:h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors text-lg md:text-xl font-bold"
                     >
                       +
                     </button>
                   </div>
                 </div>
 
-                <div className="bg-white rounded-2xl p-4 space-y-2">
-                  <div className="flex justify-between">
+                <div className="bg-white rounded-2xl p-3 md:p-4 space-y-2 border border-gray-200">
+                  <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Sous-total :</span>
                     <span className="font-semibold">
                       {(product.price * quantity).toLocaleString('fr-DZ')} DA
                     </span>
                   </div>
-                  <div className="flex justify-between">
+                  <div className="flex justify-between text-sm md:text-base">
                     <span className="text-gray-600">Livraison :</span>
                     <span className={`font-semibold ${deliveryPrice === 0 ? 'text-green-600' : ''}`}>
                       {deliveryPrice === 0 ? 'GRATUITE' : `${deliveryPrice.toLocaleString('fr-DZ')} DA`}
                     </span>
                   </div>
                   <div className="border-t pt-2 flex justify-between items-center">
-                    <span className="text-xl font-bold">Total :</span>
-                    <span className="text-2xl font-bold text-primary-600">
+                    <span className="text-lg md:text-xl font-bold">Total :</span>
+                    <span className="text-xl md:text-2xl font-bold text-primary-600">
                       {((product.price * quantity) + deliveryPrice).toLocaleString('fr-DZ')} DA
                     </span>
                   </div>
@@ -401,9 +475,9 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
 
                 <button
                   type="submit"
-                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-4 rounded-2xl font-bold text-lg shadow-soft-lg hover:shadow-soft transition-all hover:scale-105 flex items-center justify-center space-x-2"
+                  className="w-full bg-gradient-to-r from-green-500 to-green-600 text-white py-3 md:py-4 rounded-2xl font-bold text-base md:text-lg shadow-soft-lg hover:shadow-soft transition-all hover:scale-105 flex items-center justify-center space-x-2"
                 >
-                  <ShoppingCart className="w-6 h-6" />
+                  <ShoppingCart className="w-5 h-5 md:w-6 md:h-6" />
                   <span>COMMANDER MAINTENANT</span>
                 </button>
 
@@ -411,31 +485,59 @@ export default function ProductDetailOneStep({ onAddToCart: _onAddToCart }: Prod
                   🔒 Paiement à la livraison • Garantie satisfait ou remboursé
                 </p>
               </form>
+
+              <div className="mt-4 flex items-center justify-center space-x-2">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={product.stock === 0}
+                  className="text-sm text-primary-600 hover:text-primary-700 font-medium underline disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Ou ajouter au panier
+                </button>
+                <ShareProductButton productId={product.id} productName={product.name} />
+              </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="flex items-start space-x-3 p-4 bg-pastel-blue/30 rounded-2xl">
-                <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Truck className="w-5 h-5 text-white" />
+            {/* Avantages */}
+            <div className="grid grid-cols-2 gap-3 md:gap-4">
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 md:p-4 bg-blue-50 rounded-2xl">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Truck className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm">Livraison rapide</h4>
-                  <p className="text-xs text-gray-600">48h maximum</p>
+                  <h4 className="font-semibold text-xs md:text-sm">Livraison rapide</h4>
+                  <p className="text-xs text-gray-600">Livraison en 48h</p>
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3 p-4 bg-pastel-green/30 rounded-2xl">
-                <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center flex-shrink-0">
-                  <Shield className="w-5 h-5 text-white" />
+              <div className="flex items-start space-x-2 md:space-x-3 p-3 md:p-4 bg-purple-50 rounded-2xl">
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Shield className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
                 <div>
-                  <h4 className="font-semibold text-sm">Garantie qualité</h4>
-                  <p className="text-xs text-gray-600">100% authentique</p>
+                  <h4 className="font-semibold text-xs md:text-sm">Garantie qualité</h4>
+                  <p className="text-xs text-gray-600">Produit authentique</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
+
+        {/* Produits connexes */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-12 md:mt-20">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 md:mb-8">Produits connexes</h2>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {relatedProducts.map(relatedProduct => (
+                <ProductCard 
+                  key={relatedProduct.id} 
+                  product={relatedProduct} 
+                  onAddToCart={_onAddToCart}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )
