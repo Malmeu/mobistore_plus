@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Truck, Shield, ArrowLeft, Star, Check } from 'lucide-react'
+import { ShoppingCart, Heart, Truck, Shield, ArrowLeft, Star, Check, ChevronLeft, ChevronRight } from 'lucide-react'
 import { supabase } from '../lib/supabase'
 import ShareProductButton from '../components/ShareProductButton'
+import ProductCard from '../components/ProductCard'
 import type { Product } from '../types'
 
 interface ProductDetailProps {
@@ -17,6 +18,7 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
   const [isFavorite, setIsFavorite] = useState(false)
+  const [relatedProducts, setRelatedProducts] = useState<Product[]>([])
 
   useEffect(() => {
     if (id) {
@@ -34,10 +36,30 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
 
       if (error) throw error
       setProduct(data)
+      
+      if (data) {
+        fetchRelatedProducts(data.category)
+      }
     } catch (error) {
       console.error('Erreur:', error)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchRelatedProducts = async (category: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('category', category)
+        .neq('id', id)
+        .limit(4)
+
+      if (error) throw error
+      setRelatedProducts(data || [])
+    } catch (error) {
+      console.error('Erreur:', error)
     }
   }
 
@@ -91,6 +113,14 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
     )
   }
 
+  const nextImage = () => {
+    setSelectedImage((prev) => (prev + 1) % images.length)
+  }
+
+  const prevImage = () => {
+    setSelectedImage((prev) => (prev - 1 + images.length) % images.length)
+  }
+
   return (
     <div className="min-h-screen py-8 px-4">
       <div className="max-w-7xl mx-auto">
@@ -102,14 +132,48 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
           <span>Retour</span>
         </button>
 
+        {/* Titre du produit */}
+        <div className="mb-8">
+          <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-2">{product.name}</h1>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-1">
+              {[...Array(5)].map((_, i) => (
+                <Star
+                  key={i}
+                  className={`w-5 h-5 ${
+                    i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
+                  }`}
+                />
+              ))}
+            </div>
+            <span className="text-gray-600">(4.0) • 127 avis</span>
+            <span className="px-3 py-1 bg-primary-100 text-primary-700 rounded-full text-sm font-medium">
+              {product.category}
+            </span>
+          </div>
+        </div>
+
         <div className="grid md:grid-cols-2 gap-12">
+          {/* Slider d'images */}
           <div className="space-y-4">
-            <div className="card p-4 overflow-hidden">
+            <div className="relative card p-4 overflow-hidden group">
               <img
                 src={images[selectedImage]}
                 alt={product.name}
-                className="w-full h-96 object-cover rounded-2xl"
+                className="w-full h-96 object-contain rounded-2xl"
               />
+              <button
+                onClick={prevImage}
+                className="absolute left-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronLeft className="w-5 h-5 text-gray-900" />
+              </button>
+              <button
+                onClick={nextImage}
+                className="absolute right-6 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white p-3 rounded-full shadow-lg transition-all opacity-0 group-hover:opacity-100"
+              >
+                <ChevronRight className="w-5 h-5 text-gray-900" />
+              </button>
             </div>
             
             <div className="grid grid-cols-3 gap-4">
@@ -124,7 +188,7 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
                   <img
                     src={img}
                     alt={`${product.name} ${index + 1}`}
-                    className="w-full h-24 object-cover rounded-xl"
+                    className="w-full h-24 object-contain rounded-xl"
                   />
                 </button>
               ))}
@@ -132,75 +196,56 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
           </div>
 
           <div className="space-y-6">
+            {/* Description */}
             <div>
-              <div className="flex items-start justify-between mb-2">
-                <h1 className="text-4xl font-bold text-gray-900">{product.name}</h1>
+              <h3 className="font-semibold text-xl mb-3">Description</h3>
+              <p className="text-gray-600 leading-relaxed">{product.description}</p>
+            </div>
+
+            {/* Prix encadré */}
+            <div className="border-2 border-gray-200 rounded-2xl p-6">
+              <div className="flex items-baseline justify-between mb-4">
+                <div className="flex items-baseline space-x-2">
+                  <span className="text-3xl font-bold text-gray-900">
+                    {product.price.toLocaleString('fr-DZ')}
+                  </span>
+                  <span className="text-xl text-gray-600">DA</span>
+                </div>
                 <button
                   onClick={() => setIsFavorite(!isFavorite)}
-                  className={`p-3 rounded-xl transition-all ${
+                  className={`p-2 rounded-xl transition-all ${
                     isFavorite
                       ? 'bg-red-50 text-red-500'
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  <Heart className={`w-6 h-6 ${isFavorite ? 'fill-current' : ''}`} />
+                  <Heart className={`w-5 h-5 ${isFavorite ? 'fill-current' : ''}`} />
                 </button>
               </div>
-              
-              <div className="flex items-center space-x-2 mb-4">
-                <div className="flex items-center space-x-1">
-                  {[...Array(5)].map((_, i) => (
-                    <Star
-                      key={i}
-                      className={`w-5 h-5 ${
-                        i < 4 ? 'text-yellow-400 fill-current' : 'text-gray-300'
-                      }`}
-                    />
-                  ))}
-                </div>
-                <span className="text-gray-600">(4.0) • 127 avis</span>
-              </div>
-
-              <div className="inline-block px-4 py-2 bg-pastel-blue rounded-xl text-sm font-medium mb-4">
-                {product.category}
-              </div>
-            </div>
-
-            <div className="border-t border-b py-6">
-              <div className="flex items-baseline space-x-2">
-                <span className="text-5xl font-bold bg-gradient-to-r from-primary-600 to-primary-800 bg-clip-text text-transparent">
-                  {product.price.toLocaleString('fr-DZ')}
-                </span>
-                <span className="text-2xl text-gray-600">DA</span>
-              </div>
               {product.stock < 5 && product.stock > 0 && (
-                <p className="text-orange-600 font-medium mt-2">
+                <p className="text-orange-600 font-medium">
                   ⚠️ Plus que {product.stock} en stock !
                 </p>
               )}
               {product.stock === 0 && (
-                <p className="text-red-600 font-medium mt-2">❌ Rupture de stock</p>
+                <p className="text-red-600 font-medium">❌ Rupture de stock</p>
               )}
               {product.stock >= 5 && (
-                <p className="text-green-600 font-medium mt-2 flex items-center space-x-2">
+                <p className="text-green-600 font-medium flex items-center space-x-2">
                   <Check className="w-5 h-5" />
                   <span>En stock</span>
                 </p>
               )}
             </div>
 
-            <div>
-              <h3 className="font-semibold text-lg mb-3">Description</h3>
-              <p className="text-gray-600 leading-relaxed">{product.description}</p>
-            </div>
-
-            <div className="space-y-4">
+            {/* Formulaire d'achat encadré orange */}
+            <div className="border-2 border-primary-500 rounded-2xl p-6 space-y-4">
               <div className="flex items-center space-x-4">
                 <label className="font-medium">Quantité :</label>
                 <div className="flex items-center space-x-3">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors"
+                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors font-semibold"
                   >
                     -
                   </button>
@@ -208,7 +253,7 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
                   <button
                     onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
                     disabled={quantity >= product.stock}
-                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-10 h-10 bg-gray-100 hover:bg-gray-200 rounded-xl flex items-center justify-center transition-colors disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
                   >
                     +
                   </button>
@@ -228,9 +273,10 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4 pt-6">
-              <div className="flex items-start space-x-3 p-4 bg-pastel-blue/30 rounded-2xl">
-                <div className="w-10 h-10 bg-primary-500 rounded-xl flex items-center justify-center flex-shrink-0">
+            {/* Avantages */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex items-start space-x-3 p-4 bg-blue-50 rounded-2xl">
+                <div className="w-10 h-10 bg-blue-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Truck className="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -239,7 +285,7 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
                 </div>
               </div>
 
-              <div className="flex items-start space-x-3 p-4 bg-pastel-purple/30 rounded-2xl">
+              <div className="flex items-start space-x-3 p-4 bg-purple-50 rounded-2xl">
                 <div className="w-10 h-10 bg-purple-500 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Shield className="w-5 h-5 text-white" />
                 </div>
@@ -252,12 +298,21 @@ export default function ProductDetail({ onAddToCart }: ProductDetailProps) {
           </div>
         </div>
 
-        <div className="mt-20">
-          <h2 className="text-3xl font-bold mb-8">Produits similaires</h2>
-          <div className="text-center text-gray-600 py-12">
-            <p>Chargement des produits similaires...</p>
+        {/* Produits connexes */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-20">
+            <h2 className="text-3xl font-bold mb-8">Produits connexes</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map(relatedProduct => (
+                <ProductCard 
+                  key={relatedProduct.id} 
+                  product={relatedProduct} 
+                  onAddToCart={onAddToCart}
+                />
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   )

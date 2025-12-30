@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'react-router-dom'
-import { Filter } from 'lucide-react'
+import { Filter, ChevronDown } from 'lucide-react'
 import ProductCard from '../components/ProductCard'
 import { supabase } from '../lib/supabase'
 import type { Product } from '../types'
@@ -15,6 +15,7 @@ export default function Products({ onAddToCart }: ProductsProps) {
   const [loading, setLoading] = useState(true)
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [sortBy, setSortBy] = useState<string>('newest')
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
 
   useEffect(() => {
     const categoryParam = searchParams.get('category')
@@ -81,12 +82,24 @@ export default function Products({ onAddToCart }: ProductsProps) {
 
         <div className="flex flex-col md:flex-row gap-6 mb-8">
           <div className="card p-4 md:w-64 h-fit">
-            <div className="flex items-center space-x-2 mb-4">
-              <Filter className="w-5 h-5 text-primary-600" />
-              <h3 className="font-semibold">Filtres</h3>
-            </div>
+            <button
+              onClick={() => setIsFilterOpen(!isFilterOpen)}
+              className="flex items-center justify-between w-full mb-4"
+            >
+              <div className="flex items-center space-x-2">
+                <Filter className="w-5 h-5 text-primary-600" />
+                <h3 className="font-semibold">Filtres</h3>
+              </div>
+              <ChevronDown 
+                className={`w-5 h-5 text-gray-600 transition-transform ${
+                  isFilterOpen ? 'rotate-180' : ''
+                }`}
+              />
+            </button>
 
-            <div className="space-y-4">
+            <div className={`space-y-4 overflow-hidden transition-all duration-300 ${
+              isFilterOpen ? 'max-h-[500px] opacity-100' : 'max-h-0 opacity-0'
+            }`}>
               <div>
                 <label className="block text-sm font-medium mb-2">Catégorie</label>
                 <div className="space-y-2">
