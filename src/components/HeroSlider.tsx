@@ -4,17 +4,17 @@ import { ChevronLeft, ChevronRight } from 'lucide-react'
 const slides = [
   {
     id: 1,
-    image: '/image1.png',
+    image: '/image1.jpeg',
     alt: 'Slide 1'
   },
   {
     id: 2,
-    image: '/image2.png',
+    image: '/image2.jpeg',
     alt: 'Slide 2'
   },
   {
     id: 3,
-    image: '/image3.png',
+    image: '/image3.jpeg',
     alt: 'Slide 3'
   }
 ]
@@ -56,7 +56,7 @@ export default function HeroSlider() {
             <img
               src={slide.image}
               alt={slide.alt}
-              className="w-full h-full object-contain md:object-cover object-center bg-white"
+              className="w-full h-full object-contain object-center bg-white"
             />
           </div>
         ))}
